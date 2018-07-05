@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.util.Log;
+import android.provider.Settings;
 
 import com.facebook.common.logging.FLog;
 import com.facebook.react.bridge.Arguments;
@@ -55,6 +56,18 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
     @Override
     public String getName() {
         return "Orientation";
+    }
+
+    @ReactMethod
+    public void isOrientationLockedInSettings(Callback callback) {
+        boolean isOrientationEnabled;
+        try {
+            isOrientationEnabled = Settings.System.getInt(getReactApplicationContext().getContentResolver(), Settings.System.ACCELEROMETER_ROTATION) == 1;
+        } catch (Settings.SettingNotFoundException e) {
+            isOrientationEnabled = false;
+        }
+
+        callback.invoke(null, !isOrientationEnabled);
     }
 
     @ReactMethod
