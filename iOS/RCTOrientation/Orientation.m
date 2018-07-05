@@ -137,6 +137,11 @@ static UIInterfaceOrientationMask _orientation = UIInterfaceOrientationMaskAllBu
 
 RCT_EXPORT_MODULE();
 
+RCT_EXPORT_METHOD(isOrientationLockedInSettings:(RCTResponseSenderBlock)callback)
+{
+  callback(@[[NSNull null], @0]);
+}
+
 RCT_EXPORT_METHOD(getOrientation:(RCTResponseSenderBlock)callback)
 {
   UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
