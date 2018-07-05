@@ -23,6 +23,12 @@ function getKey(listener) {
 };
 
 module.exports = {
+  isOrientationLockedInSettings(cb) {
+    Orientation.isOrientationLockedInSettings((error, result) =>{
+      cb(error, result);
+    });
+  },
+
   getOrientation(cb) {
     Orientation.getOrientation((error,orientation) =>{
       cb(error, orientation);
