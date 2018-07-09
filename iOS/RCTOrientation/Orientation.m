@@ -137,6 +137,10 @@ static UIInterfaceOrientationMask _orientation = UIInterfaceOrientationMaskAllBu
 
 RCT_EXPORT_MODULE();
 
+RCT_EXPORT_METHOD(start)
+{
+}
+
 RCT_EXPORT_METHOD(isOrientationLockedInSettings:(RCTResponseSenderBlock)callback)
 {
   callback(@[[NSNull null], @0]);
@@ -154,23 +158,6 @@ RCT_EXPORT_METHOD(getSpecificOrientation:(RCTResponseSenderBlock)callback)
   UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
   NSString *orientationStr = [self getSpecificOrientationStr:orientation];
   callback(@[[NSNull null], orientationStr]);
-}
-
-RCT_EXPORT_METHOD(setOrientation:(NSString*)orientation)
-{
-  [[NSOperationQueue mainQueue] addOperationWithBlock:^ {
-    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
-      UIInterfaceOrientation orientationEnum = UIInterfaceOrientationPortrait;
-      if ([orientation isEqualToString:@"LANDSCAPE-LEFT"] || [orientation isEqualToString:@"LANDSCAPE"]) {
-          orientationEnum = UIInterfaceOrientationLandscapeLeft;
-      } else if ([orientation isEqualToString:@"LANDSCAPE-RIGHT"]) {
-          orientationEnum = UIInterfaceOrientationLandscapeRight;
-      } else if ([orientation isEqualToString:@"PORTRAITUPSIDEDOWN"]) {
-        orientationEnum = UIInterfaceOrientationPortraitUpsideDown;
-      }
-
-    [[UIDevice currentDevice] setValue:[NSNumber numberWithInteger: orientationEnum] forKey:@"orientation"];
-  }];
 }
 
 RCT_EXPORT_METHOD(lockToPortrait)

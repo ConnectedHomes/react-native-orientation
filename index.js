@@ -24,8 +24,8 @@ function getKey(listener) {
 };
 
 module.exports = {
-  init() {
-    return Orientation.init();
+  start() {
+    return Orientation.start();
   },
 
   isOrientationLockedInSettings(cb) {
@@ -50,10 +50,6 @@ module.exports = {
     Orientation.getSpecificOrientation((error,orientation) =>{
       cb(error, orientation);
     });
-  },
-
-  setOrientation(orientation) {
-    Orientation.setOrientation(orientation);
   },
 
   lockToPortrait() {

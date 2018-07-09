@@ -65,7 +65,7 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
     }
 
     @ReactMethod
-    public void init(Promise promise) {
+    public void start(Promise promise) {
         final ContentResolver contentResolver = getReactApplicationContext().getApplicationContext().getContentResolver();
         isOrientationEnabled = getOrientationLockEnabled(contentResolver);
 
