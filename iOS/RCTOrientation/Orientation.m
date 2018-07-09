@@ -156,6 +156,23 @@ RCT_EXPORT_METHOD(getSpecificOrientation:(RCTResponseSenderBlock)callback)
   callback(@[[NSNull null], orientationStr]);
 }
 
+RCT_EXPORT_METHOD(setOrientation:(NSString*)orientation)
+{
+  [[NSOperationQueue mainQueue] addOperationWithBlock:^ {
+    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+      UIInterfaceOrientation orientationEnum = UIInterfaceOrientationPortrait;
+      if ([orientation isEqualToString:@"LANDSCAPE-LEFT"] || [orientation isEqualToString:@"LANDSCAPE"]) {
+          orientationEnum = UIInterfaceOrientationLandscapeLeft;
+      } else if ([orientation isEqualToString:@"LANDSCAPE-RIGHT"]) {
+          orientationEnum = UIInterfaceOrientationLandscapeRight;
+      } else if ([orientation isEqualToString:@"PORTRAITUPSIDEDOWN"]) {
+        orientationEnum = UIInterfaceOrientationPortraitUpsideDown;
+      }
+
+    [[UIDevice currentDevice] setValue:[NSNumber numberWithInteger: orientationEnum] forKey:@"orientation"];
+  }];
+}
+
 RCT_EXPORT_METHOD(lockToPortrait)
 {
   #if DEBUG
