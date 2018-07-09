@@ -9,11 +9,16 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.util.Log;
 import android.provider.Settings;
+import android.database.ContentObserver;
+import android.content.ContentResolver;
+import android.os.Handler;
+import android.net.Uri;
 
 import com.facebook.common.logging.FLog;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.LifecycleEventListener;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -26,12 +31,13 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class OrientationModule extends ReactContextBaseJavaModule implements LifecycleEventListener{
-    final BroadcastReceiver receiver;
+public class OrientationModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
+    private final BroadcastReceiver receiver;
+    private boolean isOrientationEnabled;
+    private String orientationValue;
 
     public OrientationModule(ReactApplicationContext reactContext) {
         super(reactContext);
-        final ReactApplicationContext ctx = reactContext;
 
         receiver = new BroadcastReceiver() {
             @Override
@@ -39,19 +45,64 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
                 Configuration newConfig = intent.getParcelableExtra("newConfig");
                 Log.d("receiver", String.valueOf(newConfig.orientation));
 
-                String orientationValue = newConfig.orientation == 1 ? "PORTRAIT" : "LANDSCAPE";
-
+                orientationValue = newConfig.orientation == 1 ? "PORTRAIT" : "LANDSCAPE";
                 WritableMap params = Arguments.createMap();
                 params.putString("orientation", orientationValue);
-                if (ctx.hasActiveCatalystInstance()) {
-                    ctx
-                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                    .emit("orientationDidChange", params);
-                }
+                sendNotification("orientationDidChange", params);
             }
         };
-        ctx.addLifecycleEventListener(this);
+
+        reactContext.addLifecycleEventListener(this);
     }
+
+    private void sendNotification(String eventName, WritableMap params) {
+        final ReactApplicationContext ctx = getReactApplicationContext();
+        if (ctx.hasActiveCatalystInstance()) {
+            ctx
+                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                    .emit(eventName, params);
+        }
+    }
+
+    @ReactMethod
+    public void init(Promise promise) {
+        final ContentResolver contentResolver = getReactApplicationContext().getApplicationContext().getContentResolver();
+        isOrientationEnabled = getOrientationLockEnabled(contentResolver);
+
+        try {
+            Uri setting = Settings.System.getUriFor(Settings.System.ACCELEROMETER_ROTATION);
+            ContentObserver observer = new ContentObserver(new Handler()) {
+                @Override
+                public void onChange(boolean selfChange) {
+                    super.onChange(selfChange);
+                    isOrientationEnabled = getOrientationLockEnabled(contentResolver);
+                    WritableMap params = Arguments.createMap();
+                    params.putBoolean("isOrientationEnabled", isOrientationEnabled);
+
+                    sendNotification("orientationLockSettingsDidChanged", params);
+                }
+
+                @Override
+                public boolean deliverSelfNotifications() {
+                    return true;
+                }
+            };
+            contentResolver.registerContentObserver(setting, false, observer);
+            promise.resolve("Initialized!");
+        } catch (Exception e) {
+            promise.reject(e);
+        }
+
+    }
+
+    private Boolean getOrientationLockEnabled(ContentResolver contentResolver) {
+        try {
+            return Settings.System.getInt(contentResolver, Settings.System.ACCELEROMETER_ROTATION) == 1;
+        } catch (Settings.SettingNotFoundException e) {
+            return false;
+        }
+    }
+
 
     @Override
     public String getName() {
@@ -60,13 +111,6 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
 
     @ReactMethod
     public void isOrientationLockedInSettings(Callback callback) {
-        boolean isOrientationEnabled;
-        try {
-            isOrientationEnabled = Settings.System.getInt(getReactApplicationContext().getContentResolver(), Settings.System.ACCELEROMETER_ROTATION) == 1;
-        } catch (Settings.SettingNotFoundException e) {
-            isOrientationEnabled = false;
-        }
-
         callback.invoke(null, !isOrientationEnabled);
     }
 
@@ -129,7 +173,8 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
     }
 
     @Override
-    public @Nullable Map<String, Object> getConstants() {
+    public @Nullable
+    Map<String, Object> getConstants() {
         HashMap<String, Object> constants = new HashMap<String, Object>();
         int orientationInt = getReactApplicationContext().getResources().getConfiguration().orientation;
 
@@ -165,21 +210,18 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
         }
         activity.registerReceiver(receiver, new IntentFilter("onConfigurationChanged"));
     }
+
     @Override
     public void onHostPause() {
         final Activity activity = getCurrentActivity();
         if (activity == null) return;
-        try
-        {
+        try {
             activity.unregisterReceiver(receiver);
-        }
-        catch (java.lang.IllegalArgumentException e) {
+        } catch (java.lang.IllegalArgumentException e) {
             FLog.e(ReactConstants.TAG, "receiver already unregistered", e);
         }
     }
 
     @Override
-    public void onHostDestroy() {
-
-        }
-    }
+    public void onHostDestroy() {}
+}

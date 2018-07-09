@@ -4,6 +4,7 @@ var DeviceEventEmitter = require('react-native').DeviceEventEmitter;
 var listeners = {};
 var orientationDidChangeEvent = 'orientationDidChange';
 var specificOrientationDidChangeEvent = 'specificOrientationDidChange';
+var orientationLockSettingsDidChanged = 'orientationLockSettingsDidChanged';
 
 var id = 0;
 var META = '__listener_id';
@@ -23,6 +24,16 @@ function getKey(listener) {
 };
 
 module.exports = {
+  init() {
+    return Orientation.init();
+  },
+
+  isOrientationLockedInSettings(cb) {
+    Orientation.isOrientationLockedInSettings((error, result) =>{
+      cb(error, result);
+    });
+  },
+
   isOrientationLockedInSettings(cb) {
     Orientation.isOrientationLockedInSettings((error, result) =>{
       cb(error, result);
@@ -90,6 +101,25 @@ module.exports = {
   },
 
   removeSpecificOrientationListener(cb) {
+    var key = getKey(cb);
+
+    if (!listeners[key]) {
+      return;
+    }
+
+    listeners[key].remove();
+    listeners[key] = null;
+  },
+
+  addOrientationLockSettingsDidChanged(cb) {
+    var key = getKey(cb);
+    listeners[key] = DeviceEventEmitter.addListener(orientationLockSettingsDidChanged,
+      (body) => {
+        cb(body.orientation);
+      });
+  },
+
+  removeOrientationLockSettingsDidChanged(cb) {
     var key = getKey(cb);
 
     if (!listeners[key]) {
