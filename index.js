@@ -52,6 +52,10 @@ module.exports = {
     });
   },
 
+  setOrientation(orientation) {
+    Orientation.setOrientation(orientation);
+  },
+
   lockToPortrait() {
     Orientation.lockToPortrait();
   },

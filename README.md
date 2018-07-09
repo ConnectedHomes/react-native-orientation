@@ -219,3 +219,4 @@ removeSpecificOrientationListener((specificOrientation) => {});
 - `unlockAllOrientations()`
 - `getOrientation((err, orientation) => {})`
 - `getSpecificOrientation((err, specificOrientation) => {})`
+- `setOrientation(specificOrientation)` ⚠ iOS only
