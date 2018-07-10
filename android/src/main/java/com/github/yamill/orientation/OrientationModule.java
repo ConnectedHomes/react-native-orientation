@@ -40,7 +40,7 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
         super(reactContext);
 
 
-        receiver = new OrientationEventListener(ctx) {
+        receiver = new OrientationEventListener(reactContext) {
             int orientationInt = getReactApplicationContext().getResources().getConfiguration().orientation;
             String currentSpecificOrientation = OrientationModule.this.getOrientationString(orientationInt);
 
@@ -222,14 +222,16 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
 
     @Override
     public void onHostResume() {
-
+        receiver.enable();
     }
 
     @Override
     public void onHostPause() {
-
+        receiver.disable();
     }
 
     @Override
-    public void onHostDestroy() {}
+    public void onHostDestroy() {
+        receiver.disable();
+    }
 }
