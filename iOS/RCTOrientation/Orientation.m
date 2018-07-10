@@ -42,11 +42,9 @@ static UIInterfaceOrientationMask _orientation = UIInterfaceOrientationMaskAllBu
 - (void)deviceOrientationDidChange:(NSNotification *)notification
 {
   UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
-  [self.bridge.eventDispatcher sendDeviceEventWithName:@"specificOrientationDidChange"
-                                              body:@{@"specificOrientation": [self getSpecificOrientationStr:orientation]}];
-
   [self.bridge.eventDispatcher sendDeviceEventWithName:@"orientationDidChange"
-                                              body:@{@"orientation": [self getOrientationStr:orientation]}];
+                                              body:@{@"orientation": [self getOrientationStr:orientation],
+                                                     @"specificOrientation": [self getSpecificOrientationStr:orientation]}];
 
 }
 
@@ -150,14 +148,25 @@ RCT_EXPORT_METHOD(getOrientation:(RCTResponseSenderBlock)callback)
 {
   UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
   NSString *orientationStr = [self getOrientationStr:orientation];
-  callback(@[[NSNull null], orientationStr]);
+  NSString *specificOrientationStr = [self getSpecificOrientationStr:orientation];
+  callback(@[[NSNull null], @{ @"orientation": orientationStr, @"specificOrientation": specificOrientationStr}]);
 }
 
-RCT_EXPORT_METHOD(getSpecificOrientation:(RCTResponseSenderBlock)callback)
+RCT_EXPORT_METHOD(setOrientation:(NSString*)orientation)
 {
-  UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
-  NSString *orientationStr = [self getSpecificOrientationStr:orientation];
-  callback(@[[NSNull null], orientationStr]);
+  [[NSOperationQueue mainQueue] addOperationWithBlock:^ {
+    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+      UIInterfaceOrientation orientationEnum = UIInterfaceOrientationPortrait;
+      if ([orientation isEqualToString:@"LANDSCAPE-LEFT"] || [orientation isEqualToString:@"LANDSCAPE"]) {
+          orientationEnum = UIInterfaceOrientationLandscapeLeft;
+      } else if ([orientation isEqualToString:@"LANDSCAPE-RIGHT"]) {
+          orientationEnum = UIInterfaceOrientationLandscapeRight;
+      } else if ([orientation isEqualToString:@"PORTRAITUPSIDEDOWN"]) {
+        orientationEnum = UIInterfaceOrientationPortraitUpsideDown;
+      }
+
+    [[UIDevice currentDevice] setValue:[NSNumber numberWithInteger: orientationEnum] forKey:@"orientation"];
+  }];
 }
 
 RCT_EXPORT_METHOD(lockToPortrait)
