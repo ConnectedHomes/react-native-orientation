@@ -1,13 +1,13 @@
-var Orientation = require('react-native').NativeModules.Orientation;
-var DeviceEventEmitter = require('react-native').DeviceEventEmitter;
+const Orientation = require('react-native').NativeModules.Orientation;
+const DeviceEventEmitter = require('react-native').DeviceEventEmitter;
 
-var listeners = {};
-var orientationDidChangeEvent = 'orientationDidChange';
-var specificOrientationDidChangeEvent = 'specificOrientationDidChange';
-var orientationLockSettingsDidChanged = 'orientationLockSettingsDidChanged';
+const listeners = {};
+const orientationDidChangeEvent = 'orientationDidChange';
+const specificOrientationDidChangeEvent = 'specificOrientationDidChange';
+const orientationLockSettingsDidChanged = 'orientationLockSettingsDidChanged';
 
-var id = 0;
-var META = '__listener_id';
+let id = 0;
+const META = '__listener_id';
 
 function getKey(listener) {
   if (!listener.hasOwnProperty(META)) {
@@ -16,12 +16,12 @@ function getKey(listener) {
     }
 
     Object.defineProperty(listener, META, {
-      value: 'L' + ++id,
+      value: `L${++id}`,
     });
   }
 
   return listener[META];
-};
+}
 
 module.exports = {
   start() {
@@ -29,27 +29,25 @@ module.exports = {
   },
 
   isOrientationLockedInSettings(cb) {
-    Orientation.isOrientationLockedInSettings((error, result) =>{
+    Orientation.isOrientationLockedInSettings((error, result) => {
       cb(error, result);
     });
   },
 
   isOrientationLockedInSettings(cb) {
-    Orientation.isOrientationLockedInSettings((error, result) =>{
+    Orientation.isOrientationLockedInSettings((error, result) => {
       cb(error, result);
     });
   },
 
   getOrientation(cb) {
-    Orientation.getOrientation((error,orientation) =>{
+    Orientation.getOrientation((error, orientation) => {
       cb(error, orientation);
     });
   },
 
-  getSpecificOrientation(cb) {
-    Orientation.getSpecificOrientation((error,orientation) =>{
-      cb(error, orientation);
-    });
+  setOrientation(orientation) {
+    Orientation.setOrientation(orientation);
   },
 
   lockToPortrait() {
@@ -73,35 +71,17 @@ module.exports = {
   },
 
   addOrientationListener(cb) {
-    var key = getKey(cb);
-    listeners[key] = DeviceEventEmitter.addListener(orientationDidChangeEvent,
+    const key = getKey(cb);
+    listeners[key] = DeviceEventEmitter.addListener(
+      orientationDidChangeEvent,
       (body) => {
-        cb(body.orientation);
-      });
+        cb(body);
+      },
+    );
   },
 
   removeOrientationListener(cb) {
-    var key = getKey(cb);
-
-    if (!listeners[key]) {
-      return;
-    }
-
-    listeners[key].remove();
-    listeners[key] = null;
-  },
-
-  addSpecificOrientationListener(cb) {
-    var key = getKey(cb);
-
-    listeners[key] = DeviceEventEmitter.addListener(specificOrientationDidChangeEvent,
-      (body) => {
-        cb(body.specificOrientation);
-      });
-  },
-
-  removeSpecificOrientationListener(cb) {
-    var key = getKey(cb);
+    const key = getKey(cb);
 
     if (!listeners[key]) {
       return;
@@ -112,15 +92,17 @@ module.exports = {
   },
 
   addOrientationLockSettingsDidChanged(cb) {
-    var key = getKey(cb);
-    listeners[key] = DeviceEventEmitter.addListener(orientationLockSettingsDidChanged,
+    const key = getKey(cb);
+    listeners[key] = DeviceEventEmitter.addListener(
+      orientationLockSettingsDidChanged,
       (body) => {
         cb(body.orientation);
-      });
+      },
+    );
   },
 
   removeOrientationLockSettingsDidChanged(cb) {
-    var key = getKey(cb);
+    const key = getKey(cb);
 
     if (!listeners[key]) {
       return;
@@ -132,5 +114,5 @@ module.exports = {
 
   getInitialOrientation() {
     return Orientation.initialOrientation;
-  }
-}
+  },
+};

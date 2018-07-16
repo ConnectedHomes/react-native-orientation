@@ -1,7 +1,7 @@
 package com.github.yamill.orientation;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
+import android.view.OrientationEventListener;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -32,27 +32,45 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 public class OrientationModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
-    private final BroadcastReceiver receiver;
+    private final OrientationEventListener receiver;
     private boolean isOrientationEnabled;
     private String orientationValue;
 
     public OrientationModule(ReactApplicationContext reactContext) {
         super(reactContext);
 
-        receiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Configuration newConfig = intent.getParcelableExtra("newConfig");
-                Log.d("receiver", String.valueOf(newConfig.orientation));
 
-                orientationValue = newConfig.orientation == 1 ? "PORTRAIT" : "LANDSCAPE";
+        receiver = new OrientationEventListener(reactContext) {
+            int orientationInt = getReactApplicationContext().getResources().getConfiguration().orientation;
+            String currentSpecificOrientation = OrientationModule.this.getOrientationString(orientationInt);
+
+            @Override
+            public void onOrientationChanged(int orientation) {
+
+                String orientationValue = "PORTRAIT";
+                String specificOrientationValue = "PORTRAIT";
+                if (orientation >= 60 && orientation < 120) {
+                    orientationValue = "LANDSCAPE";
+                    specificOrientationValue = "LANDSCAPE-RIGHT";
+                } else if (orientation >= 150 && orientation < 210) {
+                    orientationValue = "PORTRAIT";
+                    specificOrientationValue = "PORTRAITUPSIDEDOWN";
+                } else if (orientation >= 240 && orientation < 300) {
+                    orientationValue = "LANDSCAPE";
+                    specificOrientationValue = "LANDSCAPE-LEFT";
+                }
+                if (currentSpecificOrientation.equals(specificOrientationValue)) {
+                    return;
+                }
+                currentSpecificOrientation = specificOrientationValue;
+
                 WritableMap params = Arguments.createMap();
                 params.putString("orientation", orientationValue);
+                params.putString("specificOrientation", specificOrientationValue);
                 sendNotification("orientationDidChange", params);
             }
         };
-
-        reactContext.addLifecycleEventListener(this);
+        receiver.enable();
     }
 
     private void sendNotification(String eventName, WritableMap params) {
@@ -123,7 +141,9 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
         if (orientation == "null") {
             callback.invoke(orientationInt, null);
         } else {
-            callback.invoke(null, orientation);
+            WritableMap params = Arguments.createMap();
+            params.putString("orientation", orientation);
+            callback.invoke(null, params);
         }
     }
 
@@ -202,26 +222,16 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
 
     @Override
     public void onHostResume() {
-        final Activity activity = getCurrentActivity();
-
-        if (activity == null) {
-            FLog.e(ReactConstants.TAG, "no activity to register receiver");
-            return;
-        }
-        activity.registerReceiver(receiver, new IntentFilter("onConfigurationChanged"));
+        receiver.enable();
     }
 
     @Override
     public void onHostPause() {
-        final Activity activity = getCurrentActivity();
-        if (activity == null) return;
-        try {
-            activity.unregisterReceiver(receiver);
-        } catch (java.lang.IllegalArgumentException e) {
-            FLog.e(ReactConstants.TAG, "receiver already unregistered", e);
-        }
+        receiver.disable();
     }
 
     @Override
-    public void onHostDestroy() {}
+    public void onHostDestroy() {
+        receiver.disable();
+    }
 }
