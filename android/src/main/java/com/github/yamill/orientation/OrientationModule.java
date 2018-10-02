@@ -51,13 +51,13 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
                 String specificOrientationValue = "PORTRAIT";
                 if (orientation >= 60 && orientation < 120) {
                     orientationValue = "LANDSCAPE";
-                    specificOrientationValue = "LANDSCAPE-RIGHT";
+                    specificOrientationValue = "LANDSCAPE-LEFT";
                 } else if (orientation >= 150 && orientation < 210) {
                     orientationValue = "PORTRAIT";
                     specificOrientationValue = "PORTRAITUPSIDEDOWN";
                 } else if (orientation >= 240 && orientation < 300) {
                     orientationValue = "LANDSCAPE";
-                    specificOrientationValue = "LANDSCAPE-LEFT";
+                    specificOrientationValue = "LANDSCAPE-RIGHT";
                 }
                 if (currentSpecificOrientation.equals(specificOrientationValue)) {
                     return;
@@ -166,7 +166,7 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
     }
 
     @ReactMethod
-    public void lockToLandscapeLeft() {
+    public void lockToLandscapeRight() {
         final Activity activity = getCurrentActivity();
         if (activity == null) {
             return;
@@ -175,7 +175,7 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
     }
 
     @ReactMethod
-    public void lockToLandscapeRight() {
+    public void lockToLandscapeLeft() {
         final Activity activity = getCurrentActivity();
         if (activity == null) {
             return;
