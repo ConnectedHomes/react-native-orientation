@@ -157,10 +157,11 @@ RCT_EXPORT_METHOD(setOrientation:(NSString*)orientation)
   [[NSOperationQueue mainQueue] addOperationWithBlock:^ {
     [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
       UIInterfaceOrientation orientationEnum = UIInterfaceOrientationPortrait;
+      // Orientations are reported on device basis hence landscape orientations should be inverted
       if ([orientation isEqualToString:@"LANDSCAPE-LEFT"] || [orientation isEqualToString:@"LANDSCAPE"]) {
-          orientationEnum = UIInterfaceOrientationLandscapeLeft;
-      } else if ([orientation isEqualToString:@"LANDSCAPE-RIGHT"]) {
           orientationEnum = UIInterfaceOrientationLandscapeRight;
+      } else if ([orientation isEqualToString:@"LANDSCAPE-RIGHT"]) {
+          orientationEnum = UIInterfaceOrientationLandscapeLeft;
       } else if ([orientation isEqualToString:@"PORTRAITUPSIDEDOWN"]) {
         orientationEnum = UIInterfaceOrientationPortraitUpsideDown;
       }
